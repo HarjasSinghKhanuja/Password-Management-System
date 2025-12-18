@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>🔑Password Management System🔒</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>🔑Password Management System🔒</h2>
+        <form method="POST">
+            <input type="password" name="password" placeholder="Enter your password" required>
+            <!-- 📋 Small Copy Password Button (ADDED) -->
+            <button type="button" id="copy-btn" style="display:none; margin-left:5px;">📋</button>
+
+            <!-- ⭐ Strong Password Generator (ADDED) -->
+            <div class="generator">
+                <p class="generator-title"><b>Strong Password Generator</b></p>
+
+                <div class="generator-row">
+                    <label for="gen-length">
+                        Length: <span id="gen-length-value">16</span>
+                    </label>
+                    <input type="range" id="gen-length" min="8" max="32" value="16">
+                </div>
+
+                <div class="generator-row generator-options">
+                    <label><input type="checkbox" id="gen-upper" checked> Uppercase</label>
+                    <label><input type="checkbox" id="gen-lower" checked> Lowercase</label>
+                    <label><input type="checkbox" id="gen-digits" checked> Numbers</label>
+                    <label><input type="checkbox" id="gen-symbols" checked> Symbols</label>
+                </div>
+
+                <button type="button" id="generate-btn">Generate Strong Password</button>
+            </div>
+            <!-- ⭐ End Generator block -->
+
+            <button type="submit">Check</button>
+        </form>
+
+        {% if result %}
+        <div class="output">
+            <h3>Strength: {{ result }}</h3>
+            <p><b>Breach Check:</b> {{ breach_status }}</p>
+            {% if suggestions %}
+                <h4>Suggestions:</h4>
+                <ul>
+                {% for s in suggestions %}
+                    <li>{{ s }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 🔥 Live Password Strength Meter + Breach Checker + Generator + Copy -->
+    <script>
+    const passwordInput = document.querySelector('input[name="password"]');
+    const form = document.querySelector('form');
+    const container = document.querySelector('.container');
+
+    // Create visual elements dynamically (existing live meter code)
+    const strengthText = document.createElement('p');
+    strengthText.style.fontWeight = 'bold';
+    const strengthBar = document.createElement('div');
+    strengthBar.style.height = '8px';
+    strengthBar.style.borderRadius = '4px';
+    strengthBar.style.marginTop = '5px';
+    strengthBar.style.transition = 'width 0.3s ease, background-color 0.3s ease';
+    const breachText = document.createElement('p');
+    breachText.style.marginTop = '5px';
+    breachText.style.fontSize = '14px';
+    breachText.style.color = '#f8f8f8';
+
+    // Insert into DOM
+    container.insertBefore(strengthText, form.nextSibling);
+    container.insertBefore(strengthBar, strengthText.nextSibling);
+    container.insertBefore(breachText, strengthBar.nextSibling);
+
+    // Password strength evaluator (existing)
+    function evaluateStrength(password) {
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[@$!%*?&]/.test(password)) score++;
+        return score;
+    }
+
+    // Live feedback while typing (existing)
+    passwordInput.addEventListener('input', async (e) => {
+        const password = e.target.value;
+        const score = evaluateStrength(password);
+
+        let color = '', text = '';
+        switch(score) {
+            case 0:
+            case 1:
+                color = 'red'; text = '⚠️Weak⚠️'; break;
+            case 2:
+            case 3:
+                color = 'orange'; text = '😐Medium👍'; break;
+            case 4:
+            case 5:
+                color = 'green'; text = '💪Strong💯'; break;
+        }
+
+        strengthText.textContent = password ? `Password Strength: ${text}` : '';
+        strengthBar.style.width = `${(score/5)*100}%`;
+        strengthBar.style.backgroundColor = color;
+
+        // --- Breach Check (via HaveIBeenPwned API) ---
+        if (password.length > 5) {
+            const sha1 = new TextEncoder().encode(password);
+            const buffer = await crypto.subtle.digest('SHA-1', sha1);
+            const hashArray = Array.from(new Uint8Array(buffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+            const prefix = hashHex.slice(0,5);
+            const suffix = hashHex.slice(5);
+
+            try {
+                const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+                const textData = await res.text();
+                const found = textData.includes(suffix);
+                if (found) {
+                    breachText.textContent = '🚨Found in Known Data Breaches🚨';
+                    breachText.style.color = 'red';
+                } else {
+                    breachText.textContent = '✅Not Found in Data Breaches✅';
+                    breachText.style.color = 'lightgreen';
+                }
+            } catch (error) {
+                breachText.textContent = '❗Error Checking Data Breaches❗';
+                breachText.style.color = 'orange';
+            }
+        } else {
+            breachText.textContent = '';
+        }
+
+        // Show / hide copy button based on content (ADDED)
+        const copyBtn = document.getElementById("copy-btn");
+        if (copyBtn) {
+            copyBtn.style.display = password.length > 0 ? "inline-block" : "none";
+        }
+    });
+
+    // -------------------------------
+    // ⭐ Strong Password Generator (ADDED)
+    // -------------------------------
+    const genLength = document.getElementById('gen-length');
+    const genLengthValue = document.getElementById('gen-length-value');
+    const genUpper = document.getElementById('gen-upper');
+    const genLower = document.getElementById('gen-lower');
+    const genDigits = document.getElementById('gen-digits');
+    const genSymbols = document.getElementById('gen-symbols');
+    const generateBtn = document.getElementById('generate-btn');
+
+    if (genLength && genLengthValue) {
+        genLength.addEventListener('input', () => {
+            genLengthValue.textContent = genLength.value;
+        });
+    }
+
+    function generateStrongPassword() {
+        const length = parseInt(genLength.value, 10);
+
+        const sets = [];
+        if (genUpper.checked) sets.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        if (genLower.checked) sets.push("abcdefghijklmnopqrstuvwxyz");
+        if (genDigits.checked) sets.push("0123456789");
+        if (genSymbols.checked) sets.push("@$!%*?&");
+
+        if (sets.length === 0) {
+            alert("Select at least one character type for generation.");
+            return '';
+        }
+
+        let allChars = sets.join('');
+        let passwordChars = [];
+
+        // Ensure at least one char from each selected set
+        sets.forEach(set => {
+            passwordChars.push(set[Math.floor(Math.random() * set.length)]);
+        });
+
+        // Fill remaining length
+        for (let i = passwordChars.length; i < length; i++) {
+            passwordChars.push(allChars[Math.floor(Math.random() * allChars.length)]);
+        }
+
+        // Shuffle (Fisher–Yates)
+        for (let i = passwordChars.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+        }
+
+        return passwordChars.join('');
+    }
+
+    if (generateBtn) {
+        generateBtn.addEventListener('click', () => {
+            const generated = generateStrongPassword();
+            if (!generated) return;
+
+            // Put generated password into the same input used by Flask
+            passwordInput.value = generated;
+
+            // Trigger live strength + breach check
+            passwordInput.dispatchEvent(new Event('input'));
+        });
+    }
+
+    // -------------------------------
+    // ⭐ Copy Password Button Logic (ADDED)
+    // -------------------------------
+    const copyBtn = document.getElementById("copy-btn");
+    if (copyBtn) {
+        copyBtn.addEventListener("click", async () => {
+            if (!passwordInput.value) return;
+            try {
+                await navigator.clipboard.writeText(passwordInput.value);
+                const oldText = copyBtn.textContent;
+                copyBtn.textContent = "✔";
+                setTimeout(() => {
+                    copyBtn.textContent = oldText;
+                }, 1000);
+            } catch (e) {
+                console.error("Clipboard copy failed:", e);
+            }
+        });
+    }
+    </script>
+</body>
+</html>

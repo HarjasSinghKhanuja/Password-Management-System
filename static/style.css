@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #74ABE2, #5563DE, #8E54E9);
+    background-size: 300% 300%;
+    animation: gradientBG 10s ease infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Animated background gradient */
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Container styling */
+.container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    width: 400px;
+    text-align: center;
+    animation: fadeIn 1s ease forwards;
+}
+
+/* Fade-in animation for the box */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Input styling */
+input[type="password"] {
+    width: 90%;
+    padding: 12px;
+    margin: 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+input[type="password"]:focus {
+    border-color: #6C63FF;
+    box-shadow: 0 0 12px rgba(108,99,255,0.4);
+    outline: none;
+}
+
+/* Button styling */
+button {
+    background: linear-gradient(45deg, #6C63FF, #4ECDC4);
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: linear-gradient(45deg, #4ECDC4, #6C63FF);
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(108,99,255,0.3);
+}
+
+/* Output section */
+.output {
+    margin-top: 25px;
+    text-align: left;
+    font-size: 14px;
+    color: #333;
+}
+
+/* ----------------------------------------- */
+/* 🔥 Live Strength Meter & Breach Indicator */
+/* ----------------------------------------- */
+
+/* Strength bar styling */
+.strength-bar {
+    width: 0%;
+    height: 10px;
+    border-radius: 5px;
+    margin: 10px auto;
+    background: #ddd;
+    transition: width 0.4s ease, background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Weak → Red glow */
+.strength-bar.weak {
+    background-color: #ff4d4d;
+    box-shadow: 0 0 12px rgba(255, 77, 77, 0.7);
+}
+
+/* Medium → Orange glow */
+.strength-bar.medium {
+    background-color: #ffa500;
+    box-shadow: 0 0 12px rgba(255, 165, 0, 0.7);
+}
+
+/* Strong → Green glow */
+.strength-bar.strong {
+    background-color: #4CAF50;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
+}
+
+/* Breach text */
+.breach-text {
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 8px;
+    color: #444;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Optional shimmer effect when strong */
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 10px rgba(76, 175, 80, 0.6); }
+    50% { box-shadow: 0 0 20px rgba(76, 175, 80, 1); }
+    100% { box-shadow: 0 0 10px rgba(76, 175, 80, 0.6); }
+}
+
+.strength-bar.strong {
+    animation: pulseGlow 1.5s infinite ease-in-out;
+}
+
+/* ----------------------------------------- */
+/* ⭐ Strong Password Generator Styles       */
+/* ----------------------------------------- */
+
+.generator {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f5f7ff;
+    border: 1px solid rgba(108,99,255,0.18);
+    text-align: left;
+    font-size: 13px;
+}
+
+.generator-title {
+    margin: 0 0 6px 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.generator-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin: 6px 0;
+}
+
+.generator-row label {
+    font-size: 12px;
+    color: #555;
+}
+
+.generator-options {
+    gap: 10px;
+}
+
+.generator-options label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #ffffff;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid #e0e0ff;
+}
+
+/* Slider for generator length */
+#gen-length {
+    width: 100%;
+    accent-color: #6C63FF;
+}
+
+/* Generator button – reuse base button look but slightly smaller */
+#generate-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 8px 18px;
+    font-size: 14px;
+}
