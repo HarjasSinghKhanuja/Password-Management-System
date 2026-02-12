@@ -5,80 +5,123 @@
     <title>🔑Password Management System🔒</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
-    <div class="container">
-        <h2>🔑Password Management System🔒</h2>
-        <form method="POST">
-            <input type="password" name="password" placeholder="Enter your password" required>
-            <!-- 📋 Small Copy Password Button (ADDED) -->
-            <button type="button" id="copy-btn" style="display:none; margin-left:5px;">📋</button>
+<div class="container">
 
-            <!-- ⭐ Strong Password Generator (ADDED) -->
-            <div class="generator">
-                <p class="generator-title"><b>Strong Password Generator</b></p>
+    <h2>🔑Password Management System🔒</h2>
 
-                <div class="generator-row">
-                    <label for="gen-length">
-                        Length: <span id="gen-length-value">16</span>
-                    </label>
-                    <input type="range" id="gen-length" min="8" max="32" value="16">
-                </div>
+    <form method="POST">
+        <input type="password" name="password" id="main-password" placeholder="Enter your password" required>
+        <button type="button" id="copy-btn" style="display:none; margin-left:5px;">📋</button>
 
-                <div class="generator-row generator-options">
-                    <label><input type="checkbox" id="gen-upper" checked> Uppercase</label>
-                    <label><input type="checkbox" id="gen-lower" checked> Lowercase</label>
-                    <label><input type="checkbox" id="gen-digits" checked> Numbers</label>
-                    <label><input type="checkbox" id="gen-symbols" checked> Symbols</label>
-                </div>
+        <!-- ⭐ Strong Password Generator -->
+        <div class="generator">
+            <p class="generator-title"><b>Strong Password Generator</b></p>
 
-                <button type="button" id="generate-btn">Generate Strong Password</button>
+            <div class="generator-row">
+                <label>Length: <span id="gen-length-value">16</span></label>
+                <input type="range" id="gen-length" min="8" max="32" value="16">
             </div>
-            <!-- ⭐ End Generator block -->
 
-            <button type="submit">Check</button>
-        </form>
+            <div class="generator-row generator-options">
+                <label><input type="checkbox" id="gen-upper" checked> Uppercase</label>
+                <label><input type="checkbox" id="gen-lower" checked> Lowercase</label>
+                <label><input type="checkbox" id="gen-digits" checked> Numbers</label>
+                <label><input type="checkbox" id="gen-symbols" checked> Symbols</label>
+            </div>
 
-        {% if result %}
-        <div class="output">
-            <h3>Strength: {{ result }}</h3>
-            <p><b>Breach Check:</b> {{ breach_status }}</p>
-            {% if suggestions %}
-                <h4>Suggestions:</h4>
-                <ul>
-                {% for s in suggestions %}
-                    <li>{{ s }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
+            <button type="button" id="generate-btn">Generate Strong Password</button>
         </div>
+
+        <button type="submit">Check</button>
+    </form>
+
+    {% if result %}
+    <div class="output">
+        <h3>Strength: {{ result }}</h3>
+        <p><b>Breach Check:</b> {{ breach_status }}</p>
+
+        {% if suggestions %}
+        <h4>Suggestions:</h4>
+        <ul>
+            {% for s in suggestions %}
+            <li>{{ s }}</li>
+            {% endfor %}
+        </ul>
         {% endif %}
     </div>
+    {% endif %}
 
-    <!-- 🔥 Live Password Strength Meter + Breach Checker + Generator + Copy -->
-    <script>
-    const passwordInput = document.querySelector('input[name="password"]');
-    const form = document.querySelector('form');
+    <hr>
+
+    <!-- Vault + Passkey Buttons -->
+    <button type="button" id="open-vault-btn">🔐Open Password Vault🔐</button>
+    <button type="button" id="open-passkey-btn">🔑Open Passkey Manager🔑</button>
+
+</div>
+
+<!-- ================= VAULT MODAL ================= -->
+<div id="vaultModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="close-vault">&times;</span>
+    <h3>Password Vault</h3>
+
+    <input type="text" id="vault-site" placeholder="Website">
+    <input type="text" id="vault-username" placeholder="Username / Email">
+    <input type="password" id="vault-password" placeholder="Password">
+
+    <button type="button" id="save-btn">💾Save💾</button>
+    <button type="button" id="autofill-btn">⚡Autofill⚡</button>
+    <button type="button" id="load-passwords-btn">📂View Stored📂</button>
+
+    <div id="password-list"></div>
+  </div>
+</div>
+
+<!-- ================= PASSKEY MODAL ================= -->
+<div id="passkeyModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="close-passkey">&times;</span>
+    <h3>Passkey Manager</h3>
+
+    <input type="text" id="passkey-site" placeholder="Website">
+    <button type="button" id="create-passkey-btn">🔑Generate Passkey🔑</button>
+    <button type="button" id="load-passkeys-btn">📂View Stored📂</button>
+
+    <div id="passkey-list"></div>
+  </div>
+</div>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const passwordInput = document.getElementById("main-password");
+    const copyBtn = document.getElementById("copy-btn");
+
     const container = document.querySelector('.container');
+    const form = document.querySelector('form');
 
-    // Create visual elements dynamically (existing live meter code)
+    /* ================= LIVE STRENGTH METER ================= */
+
     const strengthText = document.createElement('p');
     strengthText.style.fontWeight = 'bold';
+
     const strengthBar = document.createElement('div');
     strengthBar.style.height = '8px';
     strengthBar.style.borderRadius = '4px';
     strengthBar.style.marginTop = '5px';
     strengthBar.style.transition = 'width 0.3s ease, background-color 0.3s ease';
+
     const breachText = document.createElement('p');
     breachText.style.marginTop = '5px';
     breachText.style.fontSize = '14px';
-    breachText.style.color = '#f8f8f8';
 
-    // Insert into DOM
     container.insertBefore(strengthText, form.nextSibling);
     container.insertBefore(strengthBar, strengthText.nextSibling);
     container.insertBefore(breachText, strengthBar.nextSibling);
 
-    // Password strength evaluator (existing)
     function evaluateStrength(password) {
         let score = 0;
         if (password.length >= 8) score++;
@@ -89,83 +132,78 @@
         return score;
     }
 
-    // Live feedback while typing (existing)
-    passwordInput.addEventListener('input', async (e) => {
-        const password = e.target.value;
+    passwordInput.addEventListener('input', async function () {
+
+        const password = passwordInput.value;
+        copyBtn.style.display = password.length > 0 ? "inline-block" : "none";
+
         const score = evaluateStrength(password);
 
         let color = '', text = '';
-        switch(score) {
-            case 0:
-            case 1:
-                color = 'red'; text = '⚠️Weak⚠️'; break;
-            case 2:
-            case 3:
-                color = 'orange'; text = '😐Medium👍'; break;
-            case 4:
-            case 5:
-                color = 'green'; text = '💪Strong💯'; break;
-        }
+        if (score <= 1) { color = 'red'; text = '⚠️Weak⚠️'; }
+        else if (score <= 3) { color = 'orange'; text = '😐Medium👍'; }
+        else { color = 'green'; text = '💪Strong💯'; }
 
         strengthText.textContent = password ? `Password Strength: ${text}` : '';
         strengthBar.style.width = `${(score/5)*100}%`;
         strengthBar.style.backgroundColor = color;
 
-        // --- Breach Check (via HaveIBeenPwned API) ---
-        if (password.length > 5) {
-            const sha1 = new TextEncoder().encode(password);
-            const buffer = await crypto.subtle.digest('SHA-1', sha1);
-            const hashArray = Array.from(new Uint8Array(buffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+        /* ===== BREACH CHECK ===== */
+       if (password.length > 5) {
+            const sha1 = await crypto.subtle.digest(
+                "SHA-1",
+                new TextEncoder().encode(password)
+            );
+            const hashArray = Array.from(new Uint8Array(sha1));
+            const hashHex = hashArray.map(b =>
+                b.toString(16).padStart(2, "0")
+            ).join("").toUpperCase();
+
             const prefix = hashHex.slice(0,5);
             const suffix = hashHex.slice(5);
 
             try {
-                const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
-                const textData = await res.text();
-                const found = textData.includes(suffix);
-                if (found) {
-                    breachText.textContent = '🚨Found in Known Data Breaches🚨';
-                    breachText.style.color = 'red';
-                } else {
-                    breachText.textContent = '✅Not Found in Data Breaches✅';
-                    breachText.style.color = 'lightgreen';
-                }
-            } catch (error) {
-                breachText.textContent = '❗Error Checking Data Breaches❗';
-                breachText.style.color = 'orange';
-            }
-        } else {
-            breachText.textContent = '';
-        }
+                const res = await fetch(
+                    `https://api.pwnedpasswords.com/range/${prefix}`
+                );
+                const text = await res.text();
 
-        // Show / hide copy button based on content (ADDED)
-        const copyBtn = document.getElementById("copy-btn");
-        if (copyBtn) {
-            copyBtn.style.display = password.length > 0 ? "inline-block" : "none";
+                if (text.includes(suffix)) {
+                    breachText.textContent = "🚨Found in Data Breaches🚨";
+                    breachText.style.color = "red";
+                } else {
+                    breachText.textContent = "✅Not Found in Data Breaches✅";
+                    breachText.style.color = "green";
+                }
+
+            } catch {
+                breachText.textContent = "⚠!Breach Check Unavailable!⚠";
+            }
         }
     });
 
-    // -------------------------------
-    // ⭐ Strong Password Generator (ADDED)
-    // -------------------------------
-    const genLength = document.getElementById('gen-length');
-    const genLengthValue = document.getElementById('gen-length-value');
-    const genUpper = document.getElementById('gen-upper');
-    const genLower = document.getElementById('gen-lower');
-    const genDigits = document.getElementById('gen-digits');
-    const genSymbols = document.getElementById('gen-symbols');
-    const generateBtn = document.getElementById('generate-btn');
+    copyBtn.addEventListener("click", function () {
+        navigator.clipboard.writeText(passwordInput.value);
+        copyBtn.textContent = "✔";
+        setTimeout(() => copyBtn.textContent = "📋", 1000);
+    });
 
-    if (genLength && genLengthValue) {
-        genLength.addEventListener('input', () => {
-            genLengthValue.textContent = genLength.value;
-        });
-    }
+    /* ================= PASSWORD GENERATOR ================= */
+
+    const genLength = document.getElementById("gen-length");
+    const genLengthValue = document.getElementById("gen-length-value");
+    const genUpper = document.getElementById("gen-upper");
+    const genLower = document.getElementById("gen-lower");
+    const genDigits = document.getElementById("gen-digits");
+    const genSymbols = document.getElementById("gen-symbols");
+    const generateBtn = document.getElementById("generate-btn");
+
+    genLength.addEventListener("input", () => {
+        genLengthValue.textContent = genLength.value;
+    });
 
     function generateStrongPassword() {
-        const length = parseInt(genLength.value, 10);
-
+        const length = parseInt(genLength.value);
         const sets = [];
         if (genUpper.checked) sets.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
         if (genLower.checked) sets.push("abcdefghijklmnopqrstuvwxyz");
@@ -173,64 +211,150 @@
         if (genSymbols.checked) sets.push("@$!%*?&");
 
         if (sets.length === 0) {
-            alert("Select at least one character type for generation.");
-            return '';
+            alert("Select at least one character type.");
+            return "";
         }
 
-        let allChars = sets.join('');
-        let passwordChars = [];
+        const all = sets.join("");
+        let pwd = [];
 
-        // Ensure at least one char from each selected set
         sets.forEach(set => {
-            passwordChars.push(set[Math.floor(Math.random() * set.length)]);
+            pwd.push(set[Math.floor(Math.random()*set.length)]);
         });
 
-        // Fill remaining length
-        for (let i = passwordChars.length; i < length; i++) {
-            passwordChars.push(allChars[Math.floor(Math.random() * allChars.length)]);
+        while (pwd.length < length) {
+            pwd.push(all[Math.floor(Math.random()*all.length)]);
         }
 
-        // Shuffle (Fisher–Yates)
-        for (let i = passwordChars.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+        return pwd.sort(() => Math.random() - 0.5).join("");
+    }
+
+    generateBtn.addEventListener("click", function () {
+        const pwd = generateStrongPassword();
+        if (!pwd) return;
+        passwordInput.value = pwd;
+        passwordInput.dispatchEvent(new Event("input"));
+    });
+
+    /* ================= MODALS ================= */
+
+    const vaultModal = document.getElementById("vaultModal");
+    const passkeyModal = document.getElementById("passkeyModal");
+
+    document.getElementById("open-vault-btn").onclick = () => vaultModal.style.display = "block";
+    document.getElementById("close-vault").onclick = () => vaultModal.style.display = "none";
+
+    document.getElementById("open-passkey-btn").onclick = () => passkeyModal.style.display = "block";
+    document.getElementById("close-passkey").onclick = () => passkeyModal.style.display = "none";
+
+    window.onclick = function(event) {
+        if (event.target === vaultModal) vaultModal.style.display = "none";
+        if (event.target === passkeyModal) passkeyModal.style.display = "none";
+    };
+
+/* ================= AUTOFILL FIX ================= */
+
+document.getElementById("autofill-btn").onclick = function () {
+
+    const site = document.getElementById("vault-site").value.trim().toLowerCase();
+
+    if (!site) {
+        alert("Please enter a website.");
+        return;
+    }
+
+    fetch("/autofill", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `site=${encodeURIComponent(site)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.status === "success") {
+            document.getElementById("vault-username").value = data.username;
+            document.getElementById("vault-password").value = data.password;
+        } 
+        else if (data.status === "not_found") {
+            alert("No saved credentials found for this site.");
+        } 
+        else {
+            alert(data.message || "Autofill failed.");
         }
+    })
+    .catch(error => {
+        console.error("Autofill error:", error);
+        alert("Server error during autofill.");
+    });
+};
 
-        return passwordChars.join('');
-    }
+    /* ================= VAULT API ================= */
 
-    if (generateBtn) {
-        generateBtn.addEventListener('click', () => {
-            const generated = generateStrongPassword();
-            if (!generated) return;
+    document.getElementById("save-btn").onclick = function () {
+        const site = document.getElementById("vault-site").value;
+        const username = document.getElementById("vault-username").value;
+        const password = document.getElementById("vault-password").value;
 
-            // Put generated password into the same input used by Flask
-            passwordInput.value = generated;
+        fetch("/save-password", {
+            method: "POST",
+            headers: {"Content-Type":"application/x-www-form-urlencoded"},
+            body: `site=${site}&username=${username}&password=${password}`
+        }).then(() => alert("Password Saved 🔐"));
+    };
 
-            // Trigger live strength + breach check
-            passwordInput.dispatchEvent(new Event('input'));
-        });
-    }
+    document.getElementById("load-passwords-btn").onclick = function () {
+        fetch("/get-passwords")
+        .then(res => res.json())
+        .then(response => {
+            const list = document.getElementById("password-list");
+            list.innerHTML = "";
 
-    // -------------------------------
-    // ⭐ Copy Password Button Logic (ADDED)
-    // -------------------------------
-    const copyBtn = document.getElementById("copy-btn");
-    if (copyBtn) {
-        copyBtn.addEventListener("click", async () => {
-            if (!passwordInput.value) return;
-            try {
-                await navigator.clipboard.writeText(passwordInput.value);
-                const oldText = copyBtn.textContent;
-                copyBtn.textContent = "✔";
-                setTimeout(() => {
-                    copyBtn.textContent = oldText;
-                }, 1000);
-            } catch (e) {
-                console.error("Clipboard copy failed:", e);
+            if(response.status !== "success"){
+                list.innerHTML = "Error loading passwords.";
+                return;
             }
+
+            if(response.data.length === 0){
+                list.innerHTML = "No saved passwords.";
+                return;
+            }
+
+            response.data.forEach(p => {
+                list.innerHTML += `<div><b>${p.site}</b><br>${p.username}</div>`;
+            });
         });
-    }
-    </script>
+    };
+
+    /* ================= PASSKEY API ================= */
+
+    document.getElementById("create-passkey-btn").onclick = function () {
+        const site = document.getElementById("passkey-site").value;
+
+        fetch("/create-passkey", {
+            method: "POST",
+            headers: {"Content-Type":"application/x-www-form-urlencoded"},
+            body: `site=${site}`
+        })
+        .then(res => res.json())
+        .then(d => alert("Generated Passkey:\n" + d.passkey));
+    };
+
+    document.getElementById("load-passkeys-btn").onclick = function () {
+        fetch("/get-passkeys")
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById("passkey-list");
+            list.innerHTML = "";
+            data.forEach(p => {
+                list.innerHTML += `<div><b>${p.site}</b><br>${p.passkey}</div>`;
+            });
+        });
+    };
+
+});
+</script>
+
 </body>
 </html>

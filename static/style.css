@@ -193,3 +193,78 @@ button:hover {
     padding: 8px 18px;
     font-size: 14px;
 }
+
+/* ===================================================== */
+/* 🪟 APPENDED – PROFESSIONAL MODAL UI STYLING */
+/* ===================================================== */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: #ffffff;
+    margin: 6% auto;
+    padding: 22px;
+    width: 380px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+    animation: fadeIn 0.35s ease;
+}
+
+/* Close button */
+.close {
+    float: right;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #666;
+}
+
+.close:hover {
+    color: #000;
+}
+
+/* Vault + Passkey inputs */
+#vault-site,
+#vault-username,
+#vault-password,
+#passkey-site {
+    width: 92%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+#vault-site:focus,
+#vault-username:focus,
+#vault-password:focus,
+#passkey-site:focus {
+    border-color: #6C63FF;
+    box-shadow: 0 0 8px rgba(108,99,255,0.3);
+    outline: none;
+}
+
+/* Stored list boxes */
+#password-list div,
+#passkey-list div {
+    background: #f4f6ff;
+    padding: 8px;
+    margin: 6px 0;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: left;
+    border: 1px solid #e0e0ff;
+}
