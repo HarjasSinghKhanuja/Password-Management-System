@@ -244,11 +244,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const passkeyModal = document.getElementById("passkeyModal");
     let editingPasswordId = null;
     let editingPasskeyId = null;
+    let lastAutofilledSite = null;
 
     function resetPasswordEdit() {
         editingPasswordId = null;
         document.getElementById("vault-id").value = "";
         document.getElementById("save-btn").textContent = "💾Save💾";
+    }
+
+    function redirectToAutofilledSite() {
+        if (!lastAutofilledSite) return;
+        let url = lastAutofilledSite.trim();
+        if (!/^https?:\/\//i.test(url)) {
+            url = "https://" + url;
+        }
+        window.location.href = url;
     }
 
     function resetPasskeyEdit() {
@@ -292,12 +302,15 @@ document.getElementById("autofill-btn").onclick = function () {
         if (data.status === "success") {
             document.getElementById("vault-username").value = data.username;
             document.getElementById("vault-password").value = data.password;
+            lastAutofilledSite = data.site;
         } 
         else if (data.status === "not_found") {
             alert("No saved credentials found for this site.");
+            lastAutofilledSite = null;
         } 
         else {
             alert(data.message || "Autofill failed.");
+            lastAutofilledSite = null;
         }
     })
     .catch(error => {
@@ -330,11 +343,21 @@ document.getElementById("autofill-btn").onclick = function () {
                 document.getElementById("vault-site").value = "";
                 document.getElementById("vault-username").value = "";
                 document.getElementById("vault-password").value = "";
+                lastAutofilledSite = null;
             } else {
                 alert(data.message || "Save failed.");
             }
         });
     };
+
+    ["vault-site", "vault-username", "vault-password"].forEach(id => {
+        document.getElementById(id).addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && lastAutofilledSite) {
+                e.preventDefault();
+                redirectToAutofilledSite();
+            }
+        });
+    });
 
     document.getElementById("load-passwords-btn").onclick = function () {
         fetch("/get-passwords")
