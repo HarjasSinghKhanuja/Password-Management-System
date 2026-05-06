@@ -67,6 +67,7 @@
     <span class="close" id="close-vault">&times;</span>
     <h3>Password Vault</h3>
 
+    <input type="hidden" id="vault-id">
     <input type="text" id="vault-site" placeholder="Website">
     <input type="text" id="vault-username" placeholder="Username / Email">
     <input type="password" id="vault-password" placeholder="Password">
@@ -85,6 +86,7 @@
     <span class="close" id="close-passkey">&times;</span>
     <h3>Passkey Manager</h3>
 
+    <input type="hidden" id="passkey-id">
     <input type="text" id="passkey-site" placeholder="Website">
     <button type="button" id="create-passkey-btn">🔑Generate Passkey🔑</button>
     <button type="button" id="load-passkeys-btn">📂View Stored📂</button>
@@ -240,12 +242,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const vaultModal = document.getElementById("vaultModal");
     const passkeyModal = document.getElementById("passkeyModal");
+    let editingPasswordId = null;
+    let editingPasskeyId = null;
+
+    function resetPasswordEdit() {
+        editingPasswordId = null;
+        document.getElementById("vault-id").value = "";
+        document.getElementById("save-btn").textContent = "💾Save💾";
+    }
+
+    function resetPasskeyEdit() {
+        editingPasskeyId = null;
+        document.getElementById("passkey-id").value = "";
+        document.getElementById("create-passkey-btn").textContent = "🔑Generate Passkey🔑";
+    }
 
     document.getElementById("open-vault-btn").onclick = () => vaultModal.style.display = "block";
-    document.getElementById("close-vault").onclick = () => vaultModal.style.display = "none";
+    document.getElementById("close-vault").onclick = () => { vaultModal.style.display = "none"; resetPasswordEdit(); };
 
     document.getElementById("open-passkey-btn").onclick = () => passkeyModal.style.display = "block";
-    document.getElementById("close-passkey").onclick = () => passkeyModal.style.display = "none";
+    document.getElementById("close-passkey").onclick = () => { passkeyModal.style.display = "none"; resetPasskeyEdit(); };
 
     window.onclick = function(event) {
         if (event.target === vaultModal) vaultModal.style.display = "none";
@@ -293,15 +309,31 @@ document.getElementById("autofill-btn").onclick = function () {
     /* ================= VAULT API ================= */
 
     document.getElementById("save-btn").onclick = function () {
+        const id = document.getElementById("vault-id").value;
         const site = document.getElementById("vault-site").value;
         const username = document.getElementById("vault-username").value;
         const password = document.getElementById("vault-password").value;
 
-        fetch("/save-password", {
+        const url = id ? "/update-password" : "/save-password";
+        const body = `site=${encodeURIComponent(site)}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}` + (id ? `&id=${encodeURIComponent(id)}` : "");
+
+        fetch(url, {
             method: "POST",
             headers: {"Content-Type":"application/x-www-form-urlencoded"},
-            body: `site=${site}&username=${username}&password=${password}`
-        }).then(() => alert("Password Saved 🔐"));
+            body
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert(id ? "Password updated 🔐" : "Password saved 🔐");
+                resetPasswordEdit();
+                document.getElementById("vault-site").value = "";
+                document.getElementById("vault-username").value = "";
+                document.getElementById("vault-password").value = "";
+            } else {
+                alert(data.message || "Save failed.");
+            }
+        });
     };
 
     document.getElementById("load-passwords-btn").onclick = function () {
@@ -346,15 +378,30 @@ document.getElementById("autofill-btn").onclick = function () {
     /* ================= PASSKEY API ================= */
 
     document.getElementById("create-passkey-btn").onclick = function () {
+        const id = document.getElementById("passkey-id").value;
         const site = document.getElementById("passkey-site").value;
+        const url = id ? "/update-passkey" : "/create-passkey";
+        const body = `site=${encodeURIComponent(site)}` + (id ? `&id=${encodeURIComponent(id)}` : "");
 
-        fetch("/create-passkey", {
+        fetch(url, {
             method: "POST",
             headers: {"Content-Type":"application/x-www-form-urlencoded"},
-            body: `site=${site}`
+            body
         })
         .then(res => res.json())
-        .then(d => alert("Generated Passkey:\n" + d.passkey));
+        .then(d => {
+            if (d.status === "success") {
+                if (id) {
+                    alert("Passkey updated");
+                    resetPasskeyEdit();
+                } else {
+                    alert("Generated Passkey:\n" + d.passkey);
+                }
+                document.getElementById("passkey-site").value = "";
+            } else {
+                alert(d.message || "Passkey request failed.");
+            }
+        });
     };
 
     document.getElementById("load-passkeys-btn").onclick = function () {
@@ -420,9 +467,17 @@ document.addEventListener("click", function (e) {
         fetch(`/get-password/${id}`)
         .then(res => res.json())
         .then(data => {
-            document.getElementById("vault-site").value = data.site;
-            document.getElementById("vault-username").value = data.username;
-            document.getElementById("vault-password").value = data.password;
+            if (data.status === "success") {
+                editingPasswordId = data.id;
+                document.getElementById("vault-id").value = data.id;
+                document.getElementById("vault-site").value = data.site;
+                document.getElementById("vault-username").value = data.username;
+                document.getElementById("vault-password").value = data.password;
+                document.getElementById("save-btn").textContent = "Update";
+                vaultModal.style.display = "block";
+            } else {
+                alert(data.message || "Could not load password.");
+            }
         });
     }
 
@@ -433,7 +488,15 @@ document.addEventListener("click", function (e) {
         fetch(`/get-passkey/${id}`)
         .then(res => res.json())
         .then(data => {
-            document.getElementById("passkey-site").value = data.site;
+            if (data.status === "success") {
+                editingPasskeyId = data.id;
+                document.getElementById("passkey-id").value = data.id;
+                document.getElementById("passkey-site").value = data.site;
+                document.getElementById("create-passkey-btn").textContent = "Update Passkey";
+                passkeyModal.style.display = "block";
+            } else {
+                alert(data.message || "Could not load passkey.");
+            }
         });
     }
 

@@ -333,3 +333,96 @@ def get_passkeys():
             "status": "error",
             "message": str(e)
         }), 500
+
+
+@app.route("/get-password/<int:id>")
+def get_password(id):
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            c.execute("SELECT site, username, password FROM passwords WHERE id = ?", (id,))
+            row = c.fetchone()
+
+        if not row:
+            return jsonify({"status": "error", "message": "Password not found"}), 404
+
+        decrypted = cipher.decrypt(row[2].encode()).decode()
+        return jsonify({
+            "status": "success",
+            "id": id,
+            "site": row[0],
+            "username": row[1],
+            "password": decrypted
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/get-passkey/<int:id>")
+def get_passkey(id):
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            c.execute("SELECT site, passkey FROM passkeys WHERE id = ?", (id,))
+            row = c.fetchone()
+
+        if not row:
+            return jsonify({"status": "error", "message": "Passkey not found"}), 404
+
+        return jsonify({
+            "status": "success",
+            "id": id,
+            "site": row[0],
+            "passkey": row[1]
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/update-password", methods=["POST"])
+def update_password():
+    try:
+        id = request.form.get("id")
+        site = request.form.get("site", "").strip().lower()
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+
+        if not id or not site or not username or not password:
+            return jsonify({"status": "error", "message": "All fields are required"}), 400
+
+        encrypted = cipher.encrypt(password.encode()).decode()
+
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            c.execute(
+                "UPDATE passwords SET site = ?, username = ?, password = ? WHERE id = ?",
+                (site, username, encrypted, id)
+            )
+            conn.commit()
+
+        return jsonify({"status": "success", "message": "Password updated successfully"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/update-passkey", methods=["POST"])
+def update_passkey():
+    try:
+        id = request.form.get("id")
+        site = request.form.get("site", "").strip().lower()
+
+        if not id or not site:
+            return jsonify({"status": "error", "message": "Site is required"}), 400
+
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            c.execute("UPDATE passkeys SET site = ? WHERE id = ?", (site, id))
+            conn.commit()
+
+        return jsonify({"status": "success", "message": "Passkey updated successfully"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
