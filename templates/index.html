@@ -277,58 +277,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (event.target === vaultModal) vaultModal.style.display = "none";
         if (event.target === passkeyModal) passkeyModal.style.display = "none";
     };
-    function loadSavedLists() {
-        document.getElementById("load-passwords-btn").click();
-        document.getElementById("load-passkeys-btn").click();
-    }
-
-    function saveAppState() {
-        const state = {
-            vaultOpen: vaultModal.style.display === "block",
-            passkeyOpen: passkeyModal.style.display === "block",
-            vaultSite: document.getElementById("vault-site").value,
-            vaultUsername: document.getElementById("vault-username").value,
-            vaultPassword: document.getElementById("vault-password").value,
-            passkeySite: document.getElementById("passkey-site").value,
-            lastAutofilledSite,
-            editingPasswordId: document.getElementById("vault-id").value,
-            editingPasskeyId: document.getElementById("passkey-id").value
-        };
-        localStorage.setItem("vaultAppState", JSON.stringify(state));
-    }
-
-    function restoreAppState() {
-        const raw = localStorage.getItem("vaultAppState");
-        if (!raw) return;
-
-        try {
-            const state = JSON.parse(raw);
-            if (state.vaultOpen) vaultModal.style.display = "block";
-            if (state.passkeyOpen) passkeyModal.style.display = "block";
-
-            document.getElementById("vault-site").value = state.vaultSite || "";
-            document.getElementById("vault-username").value = state.vaultUsername || "";
-            document.getElementById("vault-password").value = state.vaultPassword || "";
-            document.getElementById("passkey-site").value = state.passkeySite || "";
-            document.getElementById("vault-id").value = state.editingPasswordId || "";
-            document.getElementById("passkey-id").value = state.editingPasskeyId || "";
-            lastAutofilledSite = state.lastAutofilledSite || null;
-
-            if (state.editingPasswordId) {
-                editingPasswordId = state.editingPasswordId;
-                document.getElementById("save-btn").textContent = "Update";
-            }
-            if (state.editingPasskeyId) {
-                editingPasskeyId = state.editingPasskeyId;
-                document.getElementById("create-passkey-btn").textContent = "Update Passkey";
-            }
-        } catch (err) {
-            console.error("Failed to restore app state:", err);
-            localStorage.removeItem("vaultAppState");
-        }
-    }
-
-    window.addEventListener("beforeunload", saveAppState);
 
 /* ================= AUTOFILL FIX ================= */
 
@@ -514,9 +462,6 @@ document.getElementById("autofill-btn").onclick = function () {
 });
         });
     };
-
-    restoreAppState();
-    loadSavedLists();
 });
 
 document.addEventListener("click", function (e) {
