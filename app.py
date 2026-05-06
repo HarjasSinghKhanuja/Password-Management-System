@@ -216,17 +216,23 @@ def autofill():
 
 @app.route("/create-passkey",methods=["POST"])
 def create_passkey():
-    site=request.form["site"]
-    passkey=secrets.token_urlsafe(32)
+    site = request.form.get("site", "").strip().lower()
+    passkey = request.form.get("passkey")
 
-    conn=sqlite3.connect(DB_PATH)
-    c=conn.cursor()
+    if not site:
+        return jsonify({"status": "error", "message": "Website is required."}), 400
+
+    if not passkey:
+        passkey = secrets.token_urlsafe(32)
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
     c.execute("INSERT INTO passkeys(site,passkey) VALUES(?,?)",
-              (site,passkey))
+              (site, passkey))
     conn.commit()
     conn.close()
 
-    return jsonify({"passkey":passkey})
+    return jsonify({"status": "success", "passkey": passkey})
 
 if __name__=="__main__":
     app.run(debug=True,port=5500)
@@ -413,13 +419,17 @@ def update_passkey():
     try:
         id = request.form.get("id")
         site = request.form.get("site", "").strip().lower()
+        passkey = request.form.get("passkey")
 
         if not id or not site:
             return jsonify({"status": "error", "message": "Site is required"}), 400
 
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
-            c.execute("UPDATE passkeys SET site = ? WHERE id = ?", (site, id))
+            if passkey:
+                c.execute("UPDATE passkeys SET site = ?, passkey = ? WHERE id = ?", (site, passkey, id))
+            else:
+                c.execute("UPDATE passkeys SET site = ? WHERE id = ?", (site, id))
             conn.commit()
 
         return jsonify({"status": "success", "message": "Passkey updated successfully"})

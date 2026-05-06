@@ -88,8 +88,13 @@
 
     <input type="hidden" id="passkey-id">
     <input type="text" id="passkey-site" placeholder="Website">
-    <button type="button" id="create-passkey-btn">🔑Generate Passkey🔑</button>
-    <button type="button" id="load-passkeys-btn">📂View Stored📂</button>
+    <p class="hint">Generate a passkey and save it to store your website credentials securely.</p>
+    <input type="text" id="passkey-value" placeholder="Generated Passkey" readonly>
+    <div class="passkey-actions">
+      <button type="button" id="generate-passkey-btn">🔑Generate Passkey🔑</button>
+      <button type="button" id="save-passkey-btn">💾Save Passkey💾</button>
+      <button type="button" id="load-passkeys-btn">📂View Stored📂</button>
+    </div>
 
     <div id="passkey-list"></div>
   </div>
@@ -264,7 +269,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function resetPasskeyEdit() {
         editingPasskeyId = null;
         document.getElementById("passkey-id").value = "";
-        document.getElementById("create-passkey-btn").textContent = "🔑Generate Passkey🔑";
+        document.getElementById("passkey-value").value = "";
+        document.getElementById("save-passkey-btn").textContent = "💾Save Passkey💾";
+        document.getElementById("save-passkey-btn").disabled = true;
     }
 
     document.getElementById("open-vault-btn").onclick = () => vaultModal.style.display = "block";
@@ -408,11 +415,40 @@ document.getElementById("autofill-btn").onclick = function () {
 
     /* ================= PASSKEY API ================= */
 
-    document.getElementById("create-passkey-btn").onclick = function () {
+    document.getElementById("generate-passkey-btn").onclick = function () {
+        const site = document.getElementById("passkey-site").value.trim();
+        if (!site) {
+            alert("Enter a website before generating a passkey.");
+            return;
+        }
+
+        const length = 32;
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+        let passkey = "";
+        for (let i = 0; i < length; i++) {
+            passkey += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        document.getElementById("passkey-value").value = passkey;
+        document.getElementById("save-passkey-btn").disabled = false;
+    };
+
+    document.getElementById("save-passkey-btn").onclick = function () {
         const id = document.getElementById("passkey-id").value;
-        const site = document.getElementById("passkey-site").value;
+        const site = document.getElementById("passkey-site").value.trim();
+        const passkey = document.getElementById("passkey-value").value.trim();
+
+        if (!site) {
+            alert("Website is required to save a passkey.");
+            return;
+        }
+        if (!passkey) {
+            alert("Generate a passkey first before saving.");
+            return;
+        }
+
         const url = id ? "/update-passkey" : "/create-passkey";
-        const body = `site=${encodeURIComponent(site)}` + (id ? `&id=${encodeURIComponent(id)}` : "");
+        const body = `site=${encodeURIComponent(site)}&passkey=${encodeURIComponent(passkey)}` + (id ? `&id=${encodeURIComponent(id)}` : "");
 
         fetch(url, {
             method: "POST",
@@ -422,15 +458,13 @@ document.getElementById("autofill-btn").onclick = function () {
         .then(res => res.json())
         .then(d => {
             if (d.status === "success") {
-                if (id) {
-                    alert("Passkey updated");
-                    resetPasskeyEdit();
-                } else {
-                    alert("Generated Passkey:\n" + d.passkey);
-                }
+                alert(id ? "Passkey saved successfully." : "Passkey saved successfully.");
+                resetPasskeyEdit();
                 document.getElementById("passkey-site").value = "";
+                document.getElementById("passkey-value").value = "";
+                document.getElementById("load-passkeys-btn").click();
             } else {
-                alert(d.message || "Passkey request failed.");
+                alert(d.message || "Passkey save failed.");
             }
         });
     };
@@ -522,7 +556,8 @@ document.addEventListener("click", function (e) {
                 editingPasskeyId = data.id;
                 document.getElementById("passkey-id").value = data.id;
                 document.getElementById("passkey-site").value = data.site;
-                document.getElementById("create-passkey-btn").textContent = "Update Passkey";
+                document.getElementById("passkey-value").value = data.passkey;
+                document.getElementById("save-passkey-btn").textContent = "Update Passkey";
                 passkeyModal.style.display = "block";
             } else {
                 alert(data.message || "Could not load passkey.");
