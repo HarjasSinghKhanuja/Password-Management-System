@@ -268,3 +268,34 @@ button:hover {
     text-align: left;
     border: 1px solid #e0e0ff;
 }
+
+.vault-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    transition: background 0.2s ease;
+}
+
+.vault-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.vault-actions {
+    display: none;
+}
+
+.vault-item:hover .vault-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.vault-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}

@@ -270,3 +270,106 @@ def get_passkeys():
 
 if __name__=="__main__":
     app.run(debug=True,port=5500)
+
+# /* ================= Delete Password ================= */
+
+@app.route("/delete-password", methods=["POST"])
+def delete_password():
+    id = request.form.get("id")
+
+    if not id:
+        return jsonify({"status": "error", "message": "ID required"}), 400
+
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM passwords WHERE id = ?", (id,))
+        conn.commit()
+
+    return jsonify({"status": "success"})
+
+# /* ================= Delete PassKey ================= */
+
+@app.route("/delete-passkey", methods=["POST"])
+def delete_passkey():
+    id = request.form.get("id")
+
+    if not id:
+        return jsonify({"status": "error", "message": "ID required"}), 400
+
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM passkeys WHERE id = ?", (id,))
+        conn.commit()
+
+    return jsonify({"status": "success"})
+
+# /* ================= Get Password For Editing ================= */
+
+@app.route("/get-passwords")
+def get_passwords():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+
+            # IMPORTANT: Select ID first
+            c.execute("""
+                SELECT id, site, username
+                FROM passwords
+                ORDER BY id DESC
+            """)
+
+            rows = c.fetchall()
+
+        passwords = [
+            {
+                "id": row[0],       # 🔥 REQUIRED FOR EDIT/DELETE
+                "site": row[1],
+                "username": row[2]
+            }
+            for row in rows
+        ]
+
+        return jsonify({
+            "status": "success",
+            "data": passwords
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+# /* ================= Get PassKey For Editing ================= */
+
+@app.route("/get-passkeys")
+def get_passkeys():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+
+            # IMPORTANT: Select ID first
+            c.execute("""
+                SELECT id, site, passkey
+                FROM passkeys
+                ORDER BY id DESC
+            """)
+
+            rows = c.fetchall()
+
+        passkeys = [
+            {
+                "id": row[0],      # 🔥 REQUIRED FOR EDIT/DELETE
+                "site": row[1],
+                "passkey": row[2]
+            }
+            for row in rows
+        ]
+
+        return jsonify(passkeys)
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500

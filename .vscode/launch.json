@@ -11,7 +11,7 @@
     },
     {
       "name": "Run Flask Server (Standalone)",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/app.py",
       "console": "integratedTerminal"

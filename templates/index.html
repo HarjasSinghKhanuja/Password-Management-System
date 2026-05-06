@@ -322,8 +322,24 @@ document.getElementById("autofill-btn").onclick = function () {
             }
 
             response.data.forEach(p => {
-                list.innerHTML += `<div><b>${p.site}</b><br>${p.username}</div>`;
-            });
+
+    const item = document.createElement("div");
+    item.className = "vault-item";
+
+    item.innerHTML = `
+        <div class="vault-info">
+            <b>${p.site}</b><br>
+            ${p.username}
+        </div>
+
+        <div class="vault-actions">
+            <button class="edit-btn" data-id="${p.id}">✏️</button>
+            <button class="delete-btn" data-id="${p.id}">🗑</button>
+        </div>
+    `;
+
+    list.appendChild(item);
+});
         });
     };
 
@@ -348,10 +364,78 @@ document.getElementById("autofill-btn").onclick = function () {
             const list = document.getElementById("passkey-list");
             list.innerHTML = "";
             data.forEach(p => {
-                list.innerHTML += `<div><b>${p.site}</b><br>${p.passkey}</div>`;
-            });
+
+    const item = document.createElement("div");
+    item.className = "vault-item";
+
+    item.innerHTML = `
+        <div class="vault-info">
+            <b>${p.site}</b><br>
+            ${p.passkey}
+        </div>
+
+        <div class="vault-actions">
+            <button class="edit-passkey-btn" data-id="${p.id}">✏️</button>
+            <button class="delete-passkey-btn" data-id="${p.id}">🗑</button>
+        </div>
+    `;
+
+    list.appendChild(item);
+});
         });
     };
+
+});
+
+document.addEventListener("click", function (e) {
+
+    // DELETE PASSWORD
+    if (e.target.classList.contains("delete-btn")) {
+        const id = e.target.dataset.id;
+        if (!confirm("Permanently delete this record?")) return;
+
+        fetch("/delete-password", {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: `id=${id}`
+        }).then(() => location.reload());
+    }
+
+    // DELETE PASSKEY
+    if (e.target.classList.contains("delete-passkey-btn")) {
+        const id = e.target.dataset.id;
+        if (!confirm("Permanently delete this passkey?")) return;
+
+        fetch("/delete-passkey", {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: `id=${id}`
+        }).then(() => location.reload());
+    }
+
+    // EDIT PASSWORD
+    if (e.target.classList.contains("edit-btn")) {
+        const id = e.target.dataset.id;
+
+        fetch(`/get-password/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("vault-site").value = data.site;
+            document.getElementById("vault-username").value = data.username;
+            document.getElementById("vault-password").value = data.password;
+        });
+    }
+
+    // EDIT PASSKEY
+    if (e.target.classList.contains("edit-passkey-btn")) {
+        const id = e.target.dataset.id;
+
+        fetch(`/get-passkey/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("passkey-site").value = data.site;
+        });
+    }
 
 });
 </script>
