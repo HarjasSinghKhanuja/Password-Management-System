@@ -73,7 +73,7 @@ def check_strength(password):
             "❌Do not use common passwords like '123456', 'password', 'qwerty'❌"
         )
         suggestions.append("✅Always Use a Unique and Unpredictable Password✅")
-        return "Weak", suggestions
+        return "⚠️Weak⚠️", suggestions
 
     # Length check
     if len(password) >= 8:
@@ -107,11 +107,11 @@ def check_strength(password):
 
     # Final Strength Decision
     if score <= 2:
-        return "Weak", suggestions
+        return "⚠️Weak⚠️", suggestions
     elif score == 3:
-        return "Medium", suggestions
+        return "😐Medium👍", suggestions
     else:
-        return "Strong", suggestions
+        return "💪Strong💯", suggestions
 
 
 def check_breach(password):
