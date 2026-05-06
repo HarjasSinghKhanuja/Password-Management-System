@@ -209,8 +209,7 @@ def autofill():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
-
+    
 # ==========================================================
 # 📂 GET PASSWORD LIST (FINAL VERSION)
 # ==========================================================
