@@ -211,35 +211,7 @@ def autofill():
         return jsonify({"status": "error", "message": str(e)}), 500
     
 # ==========================================================
-# 📂 GET PASSWORD LIST (FINAL VERSION)
-# ==========================================================
-
-@app.route("/get-passwords")
-def get_passwords():
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            c = conn.cursor()
-            c.execute("""
-                SELECT site, username
-                FROM passwords
-                ORDER BY id DESC
-            """)
-            rows = c.fetchall()
-
-        return jsonify({
-            "status": "success",
-            "data": [
-                {"site": r[0], "username": r[1]}
-                for r in rows
-            ]
-        })
-
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-
-# ==========================================================
-# 🔑 PASSKEY (UNCHANGED)
+#  PASSKEY (UNCHANGED)
 # ==========================================================
 
 @app.route("/create-passkey",methods=["POST"])
@@ -255,17 +227,6 @@ def create_passkey():
     conn.close()
 
     return jsonify({"passkey":passkey})
-
-
-@app.route("/get-passkeys")
-def get_passkeys():
-    conn=sqlite3.connect(DB_PATH)
-    c=conn.cursor()
-    c.execute("SELECT site,passkey FROM passkeys")
-    rows=c.fetchall()
-    conn.close()
-
-    return jsonify([{"site":r[0],"passkey":r[1]} for r in rows])
 
 if __name__=="__main__":
     app.run(debug=True,port=5500)
