@@ -13,7 +13,7 @@
 
     <form method="POST">
         <input type="password" name="password" id="main-password" placeholder="Enter your password" required>
-        <button type="button" id="copy-btn" style="display:none; margin-left:5px;">📋</button>
+        <button type="button" id="copy-btn" style="display:none; margin-left:5px;">📋Copy Password📋</button>
 
         <!-- ⭐ Strong Password Generator -->
         <div class="generator">
@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
     copyBtn.addEventListener("click", function () {
         navigator.clipboard.writeText(passwordInput.value);
         copyBtn.textContent = "✔";
-        setTimeout(() => copyBtn.textContent = "Copy Password📋", 1000);
+        setTimeout(() => copyBtn.textContent = "📋Copy Password📋", 1000);
     });
 
     /* ================= PASSWORD GENERATOR ================= */
