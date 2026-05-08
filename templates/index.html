@@ -31,7 +31,7 @@
                 <label><input type="checkbox" id="gen-symbols" checked> Symbols</label>
             </div>
 
-            <button type="button" id="generate-btn">CLick Here to Generate Strong Password</button>
+            <button type="button" id="generate-btn">Click Here to Generate Strong Password</button>
         </div>
 
         <button type="submit">Click Here for Detailed Password Analysis</button>
@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
     copyBtn.addEventListener("click", function () {
         navigator.clipboard.writeText(passwordInput.value);
         copyBtn.textContent = "✔";
-        setTimeout(() => copyBtn.textContent = "📋", 1000);
+        setTimeout(() => copyBtn.textContent = "Copy Password📋", 1000);
     });
 
     /* ================= PASSWORD GENERATOR ================= */
